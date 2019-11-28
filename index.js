@@ -1,47 +1,53 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
-const WebSocket = require('ws');
 
 const url = `file://${__dirname}/dist/index.html`;
-
+let win, loginWin;
 function createWindow() {
-    let win = new BrowserWindow({
+    win = new BrowserWindow({
         width: 800,
         height: 740,
         webPreferences: {
             nodeIntegration: true
-        }
-    });
-    let loginWin = new BrowserWindow({
-        parent: mainWindow,
+        },
         show: false,
         frame: false,
-        width: 800,
-        height: 400,
+        transparent: true
+    });
+    loginWin = new BrowserWindow({
+        parent: win,
+        show: false,
+        frame: false,
+        width: 400,
+        // width: 800,
+        height: 235,
         resizable: false,
         movable:true,
         center: true,
-        transparent: true
+        transparent: true,
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
 
     win.webContents.openDevTools();
-    win.once('ready-to-show', () => {
-        win.show();
+    win.loadURL(`${ url }`);
 
-    });
-    win.loadURL(`${ url }#about`);
-
-    loginWin.webContents.openDevTools();
+    // loginWin.webContents.openDevTools();
     loginWin.once('ready-to-show', () => {
         loginWin.show();
     });
     loginWin.loadURL(`${ url }#login`);
-    loginWindow.setMenu(null);
+    loginWin.setMenu(null);
 }
 
 app.on('ready', createWindow);
-
+ipcMain.on('showAfterLogin', (event, arg) => {
+    loginWin.close();
+    win.show();
+    win.webContents.send('store-data', arg);
+});
 ipcMain.on('exit', () => {
-	mainWindow = null;
+	win = null;
 	if (process.platform !== 'darwin') {
 		app.quit();
 	}

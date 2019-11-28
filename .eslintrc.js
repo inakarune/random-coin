@@ -10,6 +10,7 @@ module.exports = {
   ],
   rules: {
     'no-console': 'off',
+    "no-mixed-spaces-and-tabs": 0,
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
   },
   parserOptions: {

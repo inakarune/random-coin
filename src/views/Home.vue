@@ -1,106 +1,116 @@
 <template>
-  <div class="home">
-	<table>
-		<thead>
-			<th>매도</th>
-			<th>호가</th>
-			<th>매수</th>
-		</thead>
-		<tbody>
-			<tr>
-				<td class="mint-letter">366783.0</td>
-				<td class="red-letter">0.0000733</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td class="mint-letter">366783.0</td>
-				<td class="red-letter">0.0000733</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td class="mint-letter">366783.0</td>
-				<td class="red-letter">0.0000733</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td class="mint-letter">366783.0</td>
-				<td class="red-letter">0.0000733</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td class="mint-letter">366783.0</td>
-				<td class="red-letter">0.0000733</td>
-				<td></td>
-			</tr>
-			<tr>
-				<td></td>
-				<td class="red-letter">0.0000733</td>
-				<td class="orange-letter">350000.0</td>
-			</tr>			
-			<tr>
-				<td></td>
-				<td class="red-letter">0.0000733</td>
-				<td class="orange-letter">350000.0</td>
-			</tr>	
-			<tr>
-				<td></td>
-				<td class="red-letter">0.0000733</td>
-				<td class="orange-letter">350000.0</td>
-			</tr>
-			<tr>
-				<td></td>
-				<td class="red-letter">0.0000733</td>
-				<td class="orange-letter">350000.0</td>
-			</tr>
-			<tr>
-				<td></td>
-				<td class="red-letter">0.0000733</td>
-				<td class="orange-letter">350000.0</td>
-			</tr>			
-		</tbody>
-	</table>
-    <form>
-		<div class="input-box">
-			<label>매도 Max</label>
-			<input type="number">
-		</div>
-		<div class="input-box">
-			<label>매도 Min</label>
-			<input type="number">
-		</div>
-		<div class="input-box">
-			<label>최대호가수량</label>
-			<input type="number">
-		</div>
-		<div class="input-box">
-			<label>총매도수량</label>
-			<input type="number">
-		</div>
-		<div class="input-box">
-			<label>최대주기</label>
-			<input type="number">
-		</div>
-		<button class="mint" @click="test">실행</button>
-		<button class="red">전체취소</button>
-		<button class="orange" @click="exit">종료</button>
-    </form>
-	<div class="user-box">접속 아이디: <span>홍길동</span> 님</div>    
-    
-  </div>
+  	<div class="window-box">
+	  	<Titlebar />
+	  	<div class="box-content">
+			<table>
+				<thead>
+					<th>매도</th>
+					<th>호가</th>
+					<th>매수</th>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="mint-letter">366783.0</td>
+						<td class="red-letter">0.0000733</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td class="mint-letter">366783.0</td>
+						<td class="red-letter">0.0000733</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td class="mint-letter">366783.0</td>
+						<td class="red-letter">0.0000733</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td class="mint-letter">366783.0</td>
+						<td class="red-letter">0.0000733</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td class="mint-letter">366783.0</td>
+						<td class="red-letter">0.0000733</td>
+						<td></td>
+					</tr>
+					<tr>
+						<td></td>
+						<td class="red-letter">0.0000733</td>
+						<td class="orange-letter">350000.0</td>
+					</tr>			
+					<tr>
+						<td></td>
+						<td class="red-letter">0.0000733</td>
+						<td class="orange-letter">350000.0</td>
+					</tr>	
+					<tr>
+						<td></td>
+						<td class="red-letter">0.0000733</td>
+						<td class="orange-letter">350000.0</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td class="red-letter">0.0000733</td>
+						<td class="orange-letter">350000.0</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td class="red-letter">0.0000733</td>
+						<td class="orange-letter">350000.0</td>
+					</tr>			
+				</tbody>
+			</table>
+			<form>
+				<div class="input-box">
+					<label>매도 Max</label>
+					<input type="number">
+				</div>
+				<div class="input-box">
+					<label>매도 Min</label>
+					<input type="number">
+				</div>
+				<div class="input-box">
+					<label>최대호가수량</label>
+					<input type="number">
+				</div>
+				<div class="input-box">
+					<label>총매도수량</label>
+					<input type="number">
+				</div>
+				<div class="input-box">
+					<label>최대주기</label>
+					<input type="number">
+				</div>
+				<button class="mint" @click="test">실행</button>
+				<button class="red">전체취소</button>
+				<button class="orange" @click="exit">종료</button>
+			</form>
+			<div class="user-box">접속 아이디: <span>홍길동</span> 님</div>    
+    	</div>
+  	</div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import Titlebar from '@/components/Titlebar.vue';
 
 declare const window: any;
 const electron = window.require('electron');
 const WebSocket = window.require('ws');
 const { ipcRenderer } = electron;
 
-@Component
+@Component({
+	components: {
+		Titlebar
+	}
+})
 export default class Home extends Vue {
 	
 	private created() {
+		ipcRenderer.on('store-data', (event: any, store: string) => {
+			console.log(store)
+		});
 		const ws = new WebSocket('wss://api.probit.com/api/exchange/v1/ws');
 		ws.onopen = () => {
 			const msg = {
@@ -124,6 +134,8 @@ export default class Home extends Vue {
 }
 </script>
 <style lang="scss" scoped>
+@import '../assets/css/window.scss';
+
 .user-box {
 	font-size: 12px;
     text-align: left;
