@@ -5,7 +5,7 @@ let win, loginWin;
 function createWindow() {
     win = new BrowserWindow({
         width: 800,
-        height: 740,
+        height: 900,
         webPreferences: {
             nodeIntegration: true
         },
@@ -17,9 +17,10 @@ function createWindow() {
         parent: win,
         show: false,
         frame: false,
-        width: 400,
-        // width: 800,
-        height: 235,
+        // width: 400,
+        width: 800,
+        height: 800,
+        // height: 235,
         resizable: false,
         movable:true,
         center: true,
@@ -32,7 +33,7 @@ function createWindow() {
     win.webContents.openDevTools();
     win.loadURL(`${ url }`);
 
-    // loginWin.webContents.openDevTools();
+    loginWin.webContents.openDevTools();
     loginWin.once('ready-to-show', () => {
         loginWin.show();
     });

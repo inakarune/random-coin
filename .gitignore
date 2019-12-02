@@ -2,6 +2,7 @@
 node_modules
 /dist
 src/env
+Probit_Auto_Exchanging-win32-ia32
 
 # local env files
 .env.local

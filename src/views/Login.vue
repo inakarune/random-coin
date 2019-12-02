@@ -2,8 +2,8 @@
     <div class="window-box">
         <Titlebar />
         <div class="box-content">
-            <button class="left" @click="login(63)">ID: +63 9455960228</button>
-            <button class="right" @click="login(82)">ID: +82 01054916543</button>
+            <button class="left" @click="login('lion')">lion0214</button>
+            <button class="right" @click="login('kim')">kimphilbit</button>
         </div>
     </div>
 </template>
@@ -12,6 +12,8 @@ import { Component, Vue } from 'vue-property-decorator';
 import Titlebar from '@/components/Titlebar.vue';
 declare const window: any;
 const { ipcRenderer } = window.require('electron');
+import { user } from '@/env/user';
+import { userService } from './user.service';
 
 @Component({
     components: {
@@ -20,8 +22,14 @@ const { ipcRenderer } = window.require('electron');
 })
 export default class Login extends Vue {
     
-    private login(num: string) {
-        ipcRenderer.send('showAfterLogin', { id: num });
+    async login(key: string) {
+        try {
+            const response: any = await userService.getToken({ id: user[key].id, password: user[key].password });
+            localStorage.setItem('tken', response.data.access_token);
+            ipcRenderer.send('showAfterLogin', { id: key });
+        } catch (error) {
+            console.error(error);
+        }
     }
 
 	private exit(): void {
@@ -39,6 +47,7 @@ button {
     font-size: 14px;
     background-color: white;
     justify-content: space-between;
+    outline: none;
 }
 .left {
     border: 1px solid #00c89c;
