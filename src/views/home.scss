@@ -2,10 +2,13 @@
 .vertical {
 	flex-direction: column;
 }
+.money-box {
+	font-size: 12px;
+}
 .user-box {
 	font-size: 12px;
     text-align: left;
-    padding: 10px;
+	padding: 10px;
 
 	& > span {
 		font-weight: 900;
@@ -83,6 +86,10 @@ button {
 }
 .orange {
 	background-color: #ff9b00;
+}
+.blue {
+	background-color: #13143f;
+	margin-right: 10px;
 }
 .average {
 	display: flex;

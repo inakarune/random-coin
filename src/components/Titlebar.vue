@@ -1,6 +1,6 @@
 <template>
     <div class="titlebar">
-        <h1>Probit Auto Exchanging</h1>
+        <h1>Probit Auto Exchanging-KRW</h1>
         <button @click="closeBtn">x</button>
     </div>
 </template>

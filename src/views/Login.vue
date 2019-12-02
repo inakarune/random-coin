@@ -22,10 +22,11 @@ import { userService } from './user.service';
 })
 export default class Login extends Vue {
     
-    async login(key: string) {
+    async login(key: string): Promise<any> {
         try {
             const response: any = await userService.getToken({ id: user[key].id, password: user[key].password });
             localStorage.setItem('tken', response.data.access_token);
+            localStorage.setItem('id', key);
             ipcRenderer.send('showAfterLogin', { id: key });
         } catch (error) {
             console.error(error);

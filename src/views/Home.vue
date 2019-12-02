@@ -118,9 +118,11 @@
 				</div>
 				<button class="mint" @click="run">실행</button>
 				<button class="red" @click="cancelOrder">전체취소</button>
+				<button class="blue" @click="refresh">새로고침</button>
 				<button class="orange" @click="exit">종료</button>
 			</form>
-			<div class="user-box">접속 아이디: <span>{{ id }}</span> 님</div>    
+			<div class="user-box"><span>접속 아이디: {{ id }} 님</span></div>
+			<div class="money-box">총 잔고: {{ total }} | 사용가능 잔고: {{ available }}</div>
     	</div>
   	</div>
 </template>
@@ -143,8 +145,7 @@ const { ipcRenderer } = electron;
 	}
 })
 export default class Home extends Vue {
-	private id = '';
-	private order_id = '';
+	private id: string | null = '';
 	private orderMax: string = '';
 	private orderMin: string = '';
 	private orderQuantity: string = '';
@@ -159,13 +160,10 @@ export default class Home extends Vue {
 	};
 	private type: string = '';
 	private ws: any = new WebSocket('wss://api.probit.com/api/exchange/v1/ws');
+	private available: number = 0;
+	private total: number = 0;
 
-	private created() {
-		ipcRenderer.on('store-data', (event: any, store: { id: string }) => {
-			console.log(store)
-			this.id = store.id;
-		});
-		
+	private mounted() {
 		// const ws = new WebSocket('wss://api.probit.com/api/exchange/v1/ws');
 		this.ws.onopen = () => {
 			const msg = {
@@ -177,14 +175,32 @@ export default class Home extends Vue {
 
 		this.ws.onmessage = (event: any) => {
 			const data = JSON.parse(event.data);
-			console.log(data);
-
-			if (data.type === 'authorization' && data.result === 'ok') {
+			console.log('Message #########', data);
+			if (data.errorCode === 'UNAUTHORIZED') {
 				const msg = {
-					type: 'subscribe',
-					channel: 'open_order'
+					type: 'authorization',
+					token: localStorage.getItem('tken')
 				};
 				this.ws.send(JSON.stringify(msg));
+			}
+
+			if (data.type === 'authorization' && data.result === 'ok') {
+				// const msg = {
+				// 	type: 'subscribe',
+				// 	channel: 'open_order'
+				// };
+				const msg = {
+					type: 'subscribe',
+					channel: 'balance'
+				};
+				this.id = localStorage.getItem('id');
+				this.login(this.id);
+				this.ws.send(JSON.stringify(msg));
+			} else if (data.channel === 'balance') {
+				if (data.data.hasOwnProperty('KRW')) {
+					this.available = data.data.KRW.available;
+					this.total = data.data.KRW.total;
+				}
 			}
 		};
 
@@ -193,9 +209,14 @@ export default class Home extends Vue {
 		}
 	}
 
-	async login(key: string) {
+	private refresh(): void {
+		location.reload();
+	}
+
+	async login(key: any): Promise<any> {console.log('try login')
         try {
-            const response: any = await userService.getToken({ id: user[key].id, password: user[key].password });
+			const response: any = await userService.getToken({ id: user[key].id, password: user[key].password });
+			console.log('login response -------->', response)
             localStorage.setItem('tken', response.data.access_token);
         } catch (error) {
             console.error(error);
@@ -210,34 +231,25 @@ export default class Home extends Vue {
 
 		this.order.time = setInterval(() => {
 			const max: any = +this.randomTime * 1000
-			setTimeout(() => {console.log('sell!', max)
+			setTimeout(() => {
 				this.sellOrder();
 			}, that.makeRandom(1, max));
 
 			const buy_max: any = +this.orderSum * 1000;
-			setTimeout(() => {console.log('buy!')
+			setTimeout(() => {
 				this.buyOrder();
 			}, that.makeRandom(10000, buy_max));
 		}, +this.randomTime * 1000);
 
 	}
 
-	// private chooseSmallest(list: []) {
-	// 	for (let i = 0; i < list.length; i++) {
-
-	// 	}
-	// }
-
-	async getOpenOrder() {//모든 오픈오더 리스트 가져오기
+	async getOpenOrder(): Promise<any> {//모든 오픈오더 리스트 가져오기
 		try {
-			const { data }: any = await orderService.getOpenOrder('CXAT-KRW');
-			console.log(data)
-			return data;
+			const response: any = await orderService.getOpenOrder('CXAT-KRW');
+			console.log('openorder__________', response)
+			return response.data;
 		} catch (error) {
-			console.error(error);
-			if (error.response.data.errorCode === 'UNAUTHORIZED') {
-				this.login(this.id);
-			}			
+			console.error(error);			
 		}
 	}
 
@@ -259,11 +271,10 @@ export default class Home extends Vue {
 		this.randomQuantity = this.makeRandom(2000, +this.orderQuantity).split('.')[0];
 		try {
 			const response: any = await orderService.createNewOrder({ market_id: 'CXAT-KRW', type: 'limit', side: 'sell', time_in_force: 'gtc', limit_price: this.randomNum, quantity: this.randomQuantity, client_order_id: 'today' + new Date().getTime() });
-			console.log(response);
-			this.order_id = response.data.data.id;
+			console.log('sellOrder ----->', response);
 		} catch (error) {
 			console.error(error);
-			if (error.errorCode === 'UNAUTHORIZED') {
+			if (error.response.data.errorCode === 'UNAUTHORIZED') {
 				this.login(this.id);
 			}
 			if (error.response.data.errorCode.includes('INVALID_MARKET')) {
@@ -277,22 +288,36 @@ export default class Home extends Vue {
 			const list: any = await this.getOpenOrder();
 			let min = 0;
 			let idx = 0;
+			let buy = 0;
+			let sell = 0;
 			for (let i = 0; i < list.data.length; i++) {
-				let price = +list.data[i].limit_price;
-				console.log(price)
-				if (price >= +this.orderMin && price < +this.orderMax) {console.log('------>', price,  min);
-					min = price;
-					idx = i;
+				let price;
+				if (list.data[i].side === 'buy') {
+					buy++;
+				} else {
+					sell++;
+				}
+
+				if (list.data[i].side === 'sell') {
+					let price = +list.data[i].limit_price;
+					console.log(price)
+					if (price >= +this.orderMin && price < +this.orderMax) {console.log('------>', price,  min);
+						min = price;
+						idx = i;
+					}
 				}
 			}
-			const response: any = await orderService.createNewOrder({ market_id: 'CXAT-KRW', type: 'limit', side: 'buy', time_in_force: 'gtc', limit_price: list.data[idx].limit_price, quantity: list.data[idx].quantity });
-		} catch (error) {
-			if (error.response.data.errorCode === 'UNAUTHORIZED') {
-				this.login(this.id);
-			} else if (error.response.data.errorCode === 'NOT_ENOUGH_BALANCE') {
-				alert('잔고가 부족합니다.');
+
+			if (sell >= buy) {
+				if (list.data[idx].client_order_id.includes('today')) {console.log('buy!', list.data[idx].limit_price)
+					const response: any = await orderService.createNewOrder({ market_id: 'CXAT-KRW', type: 'limit', side: 'buy', time_in_force: 'gtc', limit_price: list.data[idx].limit_price, quantity: list.data[idx].quantity });
+				}
 			}
+		} catch (error) {
 			console.error(error);
+			if (error.response.data.errorCode === 'NOT_ENOUGH_BALANCE') {
+				// alert('잔고가 부족합니다.');
+			}
 		}
 	}
 
@@ -304,6 +329,7 @@ export default class Home extends Vue {
 					const response: any = await orderService.cancelOrder({ market_id: 'CXAT-KRW', order_id: item.id });
 				}
 			}
+			this.order.time = null;
 		} catch (error) {
 			console.error(error);
 		}
