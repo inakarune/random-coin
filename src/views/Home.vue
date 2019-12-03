@@ -2,98 +2,7 @@
   	<div class="window-box">
 	  	<Titlebar />
 	  	<div class="box-content vertical">
-			<!-- <table>
-				<thead>
-					<th>가격</th>
-					<th>수량</th>
-					<th>합계</th>
-				</thead>
-				<tbody>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="mint-letter">366783.0</td>
-						<td class="letter">0.0000733</td>
-						<td></td>
-					</tr>
-					<tr>
-						<td class="average" colspan="3"><span>0.0005100</span><span>0.0077KRW</span></td>
-					</tr>
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>			
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>	
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>
-					<tr>
-						<td class="orange-letter">350000.0</td>
-						<td class="letter">0.0000733</td>
-						<td class="red-letter"></td>
-					</tr>								
-				</tbody>
-			</table> -->
+			<div class="msg-box" :style="{ 'background-color': bg }" v-show="show">{{ msg }}<span @click="closeAlert">x</span></div>
 			<form v-on:submit.prevent>
 				<div class="input-box">
 					<label>매도금액 Max</label>
@@ -116,13 +25,13 @@
 					<label>매도주기</label>
 					<input type="text" v-model="randomTime">
 				</div>
-				<button class="mint" @click="run">실행</button>
-				<button class="red" @click="cancelOrder">전체취소</button>
+				<button class="mint" :disabled="type === 'cancel'" @click="run">실행</button>
+				<a href="#" class="red" @click="cancelOrder">전체취소</a>
 				<button class="blue" @click="refresh">새로고침</button>
 				<button class="orange" @click="exit">종료</button>
 			</form>
 			<div class="user-box"><span>접속 아이디: {{ id }} 님</span></div>
-			<div class="money-box">총 잔고: {{ total }} | 사용가능 잔고: {{ available }}</div>
+			<div class="money-box"><span>총 잔고: {{ total }}</span> <span>사용가능 잔고: {{ available }}</span></div>
     	</div>
   	</div>
 </template>
@@ -137,6 +46,7 @@ import { user } from '@/env/user';
 declare const window: any;
 const electron = window.require('electron');
 const WebSocket = window.require('ws');
+const log = window.require('electron-log');
 const { ipcRenderer } = electron;
 
 @Component({
@@ -158,10 +68,13 @@ export default class Home extends Vue {
 		buy: '',
 		time: ''
 	};
-	private type: string = '';
+	private type: string = 'run';
 	private ws: any = new WebSocket('wss://api.probit.com/api/exchange/v1/ws');
 	private available: number = 0;
 	private total: number = 0;
+	private bg: string = '#00c89c';
+	private show:boolean = false;
+	private msg: string = '';
 
 	private mounted() {
 		// const ws = new WebSocket('wss://api.probit.com/api/exchange/v1/ws');
@@ -177,6 +90,7 @@ export default class Home extends Vue {
 			const data = JSON.parse(event.data);
 			console.log('Message #########', data);
 			if (data.errorCode === 'UNAUTHORIZED') {
+				this.showAlert('인증이 승인되지 않습니다.', '#ff2950');
 				const msg = {
 					type: 'authorization',
 					token: localStorage.getItem('tken')
@@ -197,9 +111,16 @@ export default class Home extends Vue {
 				this.login(this.id);
 				this.ws.send(JSON.stringify(msg));
 			} else if (data.channel === 'balance') {
+				if (data.data.hasOwnProperty('CXAT') && data.data.hasOwnProperty('KRW') && data.data.hasOwnProperty('ETH')) {
+					log.info(`[KRW-CXAT 총액 - 9090000 = ${ +data.data.KRW.total - 9090000 }]---------[ETH-CXAT 총액 - 290910000 = ${ +data.data.ETH.total - 290910000 }]---------[외부유입 CXAT 총액: ${ (+data.data.KRW.total - 9090000) + (+data.data.ETH.total - 290910000) }]`);
+				}
 				if (data.data.hasOwnProperty('KRW')) {
 					this.available = data.data.KRW.available;
 					this.total = data.data.KRW.total;
+					log.info(`[KRW 총액: ${ data.data.KRW.total } KRW 사용가능 잔고: ${ data.data.KRW.available }]-----------[KRW-CXAT 총액 - 9090000 = ${ +data.data.KRW.total - 9090000 }]`);
+				}
+				if (data.data.hasOwnProperty('CXAT')) {
+					log.info(`[CXAT 총액: ${ data.data.CXAT.total } CXAT 사용가능 잔고: ${ data.data.CXAT.available }]`);
 				}
 			}
 		};
@@ -209,11 +130,21 @@ export default class Home extends Vue {
 		}
 	}
 
+	private showAlert(msg: string, color: string): void {
+		this.msg = msg;
+		this.bg = color;
+		this.show = true;
+	}
+
+	private closeAlert() {
+		this.show = false;
+	}
+
 	private refresh(): void {
 		location.reload();
 	}
 
-	async login(key: any): Promise<any> {console.log('try login')
+	async login(key: any): Promise<any> {
         try {
 			const response: any = await userService.getToken({ id: user[key].id, password: user[key].password });
 			console.log('login response -------->', response)
@@ -224,6 +155,7 @@ export default class Home extends Vue {
     }
 
 	private run() {
+		this.type = 'cancel';
 		const that = this;
 		if (this.orderMax === '' || this.orderMin === '' || this.orderQuantity === '' || this.orderSum === '' || this.randomTime === '') {
 			return alert('하나라도 입력란이 비어 있으면 안됩니다.');
@@ -240,7 +172,7 @@ export default class Home extends Vue {
 				this.buyOrder();
 			}, that.makeRandom(10000, buy_max));
 		}, +this.randomTime * 1000);
-
+		alert('입력한 값에 따라 실행됩니다.');
 	}
 
 	async getOpenOrder(): Promise<any> {//모든 오픈오더 리스트 가져오기
@@ -249,7 +181,7 @@ export default class Home extends Vue {
 			console.log('openorder__________', response)
 			return response.data;
 		} catch (error) {
-			console.error(error);			
+			console.error(error);
 		}
 	}
 
@@ -263,7 +195,7 @@ export default class Home extends Vue {
 	}
 
 	private makeRandom(min: number, max: number): any {
-		return ((Math.random() * (max - min + 1)) + min).toFixed(2);
+		return ((Math.random() * (max - min + 0.0001)) + min).toFixed(2);
 	}
 
 	async sellOrder(): Promise<any> {
@@ -275,10 +207,11 @@ export default class Home extends Vue {
 		} catch (error) {
 			console.error(error);
 			if (error.response.data.errorCode === 'UNAUTHORIZED') {
+				this.showAlert('토큰이 만료되어 승인이 거부되었습니다. 로그인을 시도합니다.', '#ff2950');
 				this.login(this.id);
 			}
 			if (error.response.data.errorCode.includes('INVALID_MARKET')) {
-				alert('매수할 가격이 존재하지 않습니다.');
+				this.showAlert('매수할 가격이 존재하지 않습니다.', '#ff2950');
 			}
 		}
 	}
@@ -311,12 +244,17 @@ export default class Home extends Vue {
 			if (sell >= buy) {
 				if (list.data[idx].client_order_id.includes('today')) {console.log('buy!', list.data[idx].limit_price)
 					const response: any = await orderService.createNewOrder({ market_id: 'CXAT-KRW', type: 'limit', side: 'buy', time_in_force: 'gtc', limit_price: list.data[idx].limit_price, quantity: list.data[idx].quantity });
+					// if (Notification.permission === "granted") {
+					// 	var notification = new Notification("KRW 매수 알림", {
+					// 		body: `${ list.data[idx].client_order_id }의 ${ list.data[idx].limit_price }을 매수하였습니다.`
+					// 	});
+					// }
 				}
 			}
 		} catch (error) {
 			console.error(error);
 			if (error.response.data.errorCode === 'NOT_ENOUGH_BALANCE') {
-				// alert('잔고가 부족합니다.');
+				this.showAlert('잔고가 부족합니다.', '#ff2950');
 			}
 		}
 	}
@@ -329,7 +267,9 @@ export default class Home extends Vue {
 					const response: any = await orderService.cancelOrder({ market_id: 'CXAT-KRW', order_id: item.id });
 				}
 			}
-			this.order.time = null;
+			clearInterval(this.order.time);
+			this.type = 'run';
+			alert('전체취소되었습니다.');
 		} catch (error) {
 			console.error(error);
 		}

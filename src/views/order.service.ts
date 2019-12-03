@@ -4,7 +4,6 @@ const baseUrl: string = `https://api.probit.com/api/exchange/v1`;
 class OrderService {
     private config: any = {
         headers: {
-          'authorization': `Bearer ${ localStorage.getItem('tken') }`,
           'Content-Type': 'application/json',
         },
     };
