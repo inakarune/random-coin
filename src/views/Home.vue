@@ -30,7 +30,7 @@
 						</div>
 						<div class="input-box">
 							<label>변동주기</label>
-							<input type="text" placeholder="(단위: 시간)">
+							<input type="text" placeholder="(단위: 초)" v-model="one.limitTime">
 						</div>
 					</div>
 				</li>
@@ -60,10 +60,100 @@
 						</div>
 						<div class="input-box">
 							<label>변동주기</label>
-							<input type="text" placeholder="(단위: 시간)" v-model="two.limitTime"> 
+							<input type="text" placeholder="(단위: 초)" v-model="two.limitTime"> 
 						</div>
 					</div>
 				</li>
+				<li>
+					<button class="collapsible" @click="menu = 2" :class="{ active: menu === 2 }">3차 주기</button>
+					<div :style="{ 'max-height': menu === 2 ? '315px': '0px' }" class="content">
+						<div class="input-box mt15">
+							<label>매도금액 Max</label>
+							<input type="text" v-model="three.max">
+						</div>
+						<div class="input-box">
+							<label>매도금액 Min</label>
+							<input type="text" v-model="three.min">
+						</div>
+						<div class="input-box">
+							<label>1회당 매도수량</label>
+							<input type="text" v-model="three.quantity">
+						</div>
+						<div class="input-box">
+							<!-- <label>총매도수량합계</label> -->
+							<label>매수주기</label>
+							<input type="text" v-model="three.buyTime">
+						</div>
+						<div class="input-box">
+							<label>매도주기</label>
+							<input type="text" v-model="three.sellTime">
+						</div>
+						<div class="input-box">
+							<label>변동주기</label>
+							<input type="text" placeholder="(단위: 초)" v-model="three.limitTime"> 
+						</div>
+					</div>
+				</li>
+				<li>
+					<button class="collapsible" @click="menu = 3" :class="{ active: menu === 3 }">4차 주기</button>
+					<div :style="{ 'max-height': menu === 3 ? '315px': '0px' }" class="content">
+						<div class="input-box mt15">
+							<label>매도금액 Max</label>
+							<input type="text" v-model="four.max">
+						</div>
+						<div class="input-box">
+							<label>매도금액 Min</label>
+							<input type="text" v-model="four.min">
+						</div>
+						<div class="input-box">
+							<label>1회당 매도수량</label>
+							<input type="text" v-model="four.quantity">
+						</div>
+						<div class="input-box">
+							<!-- <label>총매도수량합계</label> -->
+							<label>매수주기</label>
+							<input type="text" v-model="four.buyTime">
+						</div>
+						<div class="input-box">
+							<label>매도주기</label>
+							<input type="text" v-model="four.sellTime">
+						</div>
+						<div class="input-box">
+							<label>변동주기</label>
+							<input type="text" placeholder="(단위: 초)" v-model="four.limitTime"> 
+						</div>
+					</div>
+				</li>
+				<li>
+					<button class="collapsible" @click="menu = 4" :class="{ active: menu === 4 }">5차 주기</button>
+					<div :style="{ 'max-height': menu === 4 ? '315px': '0px' }" class="content">
+						<div class="input-box mt15">
+							<label>매도금액 Max</label>
+							<input type="text" v-model="five.max">
+						</div>
+						<div class="input-box">
+							<label>매도금액 Min</label>
+							<input type="text" v-model="five.min">
+						</div>
+						<div class="input-box">
+							<label>1회당 매도수량</label>
+							<input type="text" v-model="five.quantity">
+						</div>
+						<div class="input-box">
+							<!-- <label>총매도수량합계</label> -->
+							<label>매수주기</label>
+							<input type="text" v-model="five.buyTime">
+						</div>
+						<div class="input-box">
+							<label>매도주기</label>
+							<input type="text" v-model="five.sellTime">
+						</div>
+						<div class="input-box">
+							<label>변동주기</label>
+							<input type="text" placeholder="(단위: 초)" v-model="five.limitTime"> 
+						</div>
+					</div>
+				</li>				
 			</ul>
 			<div class="btn-box">
 				<button class="mint" :disabled="type === 'cancel'" @click="run">실행</button>
@@ -140,6 +230,31 @@ export default class Home extends Vue {
 		buyTime: '',
 		limitTime: ''
 	};
+	private three: any = {
+		max: '',
+		min: '',
+		quantity: '',
+		sellTime: '',
+		buyTime: '',
+		limitTime: ''
+	};
+	private four: any = {
+		max: '',
+		min: '',
+		quantity: '',
+		sellTime: '',
+		buyTime: '',
+		limitTime: ''
+	};
+	private five: any = {
+		max: '',
+		min: '',
+		quantity: '',
+		sellTime: '',
+		buyTime: '',
+		limitTime: ''
+	};
+	private count: number = 0;
 
 	private mounted() {
 		this.ws.onopen = () => {
@@ -205,36 +320,49 @@ export default class Home extends Vue {
 	}
 
 	private run() {
-		if (this.one.max === '' || this.one.min === '' || this.one.quantity === '' || this.one.sellTime === '' || this.one.buyTime === '' || this.one.limitTime || this.two.max === '' || this.two.min === '' || this.two.quantity === '' || this.two.sellTime === '' || this.two.buyTime === '' || this.two.limitTime === '') {
-			return alert('하나라도 입력란이 비어 있으면 안됩니다.');
-		}
-		
+		// if (this.one.max === '' || this.one.min === '' || this.one.quantity === '' || this.one.sellTime === '' || this.one.buyTime === '' || this.one.limitTime || this.two.max === '' || this.two.min === '' || this.two.quantity === '' || this.two.sellTime === '' || this.two.buyTime === '' || this.two.limitTime === '') {
+		// 	return alert('하나라도 입력란이 비어 있으면 안됩니다.');
+		// }
+		alert('입력한 값에 따라 실행됩니다.');
 		this.g = this.generator();
 		this.g.next();
 		this.type = 'cancel';
 	}
 
 	private* generator() {
+		this.showAlert('1차주기 시작합니다.', '#00c89c');
 		this.runSetInterval('one', 'time');
 		yield
+		this.showAlert('2차주기 시작합니다.', '#00c89c');
 		this.runSetInterval('two', 'timeTwo');
+		yield
+		this.showAlert('3차주기 시작합니다.', '#00c89c');
+		this.runSetInterval('three', 'timeThree');
+		yield
+		this.showAlert('4차주기 시작합니다.', '#00c89c');
+		this.runSetInterval('four', 'timeFour');
+		yield
+		this.showAlert('5차주기 시작합니다.', '#00c89c');
+		this.runSetInterval('five', 'timeFive');
 		yield
 	}
 	
 	private runSetInterval(obj: any, setTime: string) {
 		const that: { [index: string]: any } = this;
-		this.limit[obj] = caculateLimitDate(+that[obj].limitTime);
+		this.limit[obj] = new Date().getTime() + (+that[obj].limitTime * 1000);
 		this.order[setTime] = setInterval(() => {
 			if (new Date().getTime() > this.limit[obj]) {
+				this.count++;
 				clearInterval(this.order[setTime]);
 				this.g.next();
+				if (this.count === 4) {
+					alert('모든 주기가 끝났습니다.');
+				}
 			}
 			const { min, max, quantity, sellTime, buyTime } = that[obj];
 			this.sellAndBuy(+min, +max, +quantity, +sellTime, +buyTime);
 		}, +that[obj].sellTime * 1000);
-		alert('입력한 값에 따라 실행됩니다.');
 	}
-
 
 	private sellAndBuy(min: number, max: number, quantity: number, sellTime: number, buyTime: number): void {
 		const sell_max: any = sellTime * 1000;
