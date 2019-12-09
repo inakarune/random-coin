@@ -1,4 +1,39 @@
 @import '../assets/css/window.scss';
+ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+.collapsible {
+	width: 100%;
+	border: none;
+	border-bottom: 1px solid #ddd;
+	text-align: left;
+	padding: 20px;
+	cursor: pointer;
+	background-color: white;
+	outline: none;
+}
+.collapsible:hover {
+	background-color: #eee;
+}
+.collapsible:after {
+	content: '\002B';
+	color: #aaa;
+	font-weight: bold;
+	float: right;
+	margin-left: 5px;
+}
+.active:after {
+	content: '\2212';
+}
+.content {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.2s ease-out;
+	padding: 0px 20px;
+	box-sizing: border-box;
+}
 .msg-box {
 	color: white;
 	position: fixed;
@@ -68,12 +103,16 @@ td {
 tr:nth-child(even) {
 	background-color: #eee;
 }
-form {
-	padding: 20px;
-	box-sizing: border-box;
+.btn-box {
+	display: flex;
+	justify-content: center;
 	border-bottom: 1px solid #ddd;
+	padding-bottom: 20px;
+	margin-top: 20px;
 }
-
+.mt15 {
+	margin-top: 15px;
+}
 .input-box {
 	display: flex;
 	justify-content: space-between;
@@ -88,7 +127,7 @@ input[type="number"], input[type="text"] {
     padding: 10px;
 	outline: none;
 }
-button {
+.mint, .red, .orange, .blue {
 	border: none;
 	color: white;
 	border-radius: 5px;
