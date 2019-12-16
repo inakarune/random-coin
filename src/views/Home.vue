@@ -5,7 +5,7 @@
 			<div class="msg-box" :style="{ 'background-color': bg }" v-show="show">{{ msg }}<span @click="show = false">x</span></div>
 			<ul>
 				<li>
-					<button class="collapsible" @click="menu = 0" :class="{ active: menu === 0 }">1차 주기</button>
+					<button class="collapsible" @click="selectMenu(0)" :class="{ active: menu === 0 }">1차 주기</button>
 					<div :style="{ 'max-height': menu === 0 ? '315px': '0px' }" class="content">
 						<div class="input-box mt15">
 							<label>매도금액 Max</label>
@@ -35,7 +35,7 @@
 					</div>
 				</li>
 				<li>
-					<button class="collapsible" @click="menu = 1" :class="{ active: menu === 1 }">2차 주기</button>
+					<button class="collapsible" @click="selectMenu(1)" :class="{ active: menu === 1 }">2차 주기</button>
 					<div :style="{ 'max-height': menu === 1 ? '315px': '0px' }" class="content">
 						<div class="input-box mt15">
 							<label>매도금액 Max</label>
@@ -65,7 +65,7 @@
 					</div>
 				</li>
 				<li>
-					<button class="collapsible" @click="menu = 2" :class="{ active: menu === 2 }">3차 주기</button>
+					<button class="collapsible" @click="selectMenu(2)" :class="{ active: menu === 2 }">3차 주기</button>
 					<div :style="{ 'max-height': menu === 2 ? '315px': '0px' }" class="content">
 						<div class="input-box mt15">
 							<label>매도금액 Max</label>
@@ -80,7 +80,6 @@
 							<input type="text" v-model="three.quantity">
 						</div>
 						<div class="input-box">
-							<!-- <label>총매도수량합계</label> -->
 							<label>매수주기</label>
 							<input type="text" v-model="three.buyTime">
 						</div>
@@ -95,7 +94,7 @@
 					</div>
 				</li>
 				<li>
-					<button class="collapsible" @click="menu = 3" :class="{ active: menu === 3 }">4차 주기</button>
+					<button class="collapsible" @click="selectMenu(3)" :class="{ active: menu === 3 }">4차 주기</button>
 					<div :style="{ 'max-height': menu === 3 ? '315px': '0px' }" class="content">
 						<div class="input-box mt15">
 							<label>매도금액 Max</label>
@@ -110,7 +109,6 @@
 							<input type="text" v-model="four.quantity">
 						</div>
 						<div class="input-box">
-							<!-- <label>총매도수량합계</label> -->
 							<label>매수주기</label>
 							<input type="text" v-model="four.buyTime">
 						</div>
@@ -125,7 +123,7 @@
 					</div>
 				</li>
 				<li>
-					<button class="collapsible" @click="menu = 4" :class="{ active: menu === 4 }">5차 주기</button>
+					<button class="collapsible" @click="selectMenu(4)" :class="{ active: menu === 4 }">5차 주기</button>
 					<div :style="{ 'max-height': menu === 4 ? '315px': '0px' }" class="content">
 						<div class="input-box mt15">
 							<label>매도금액 Max</label>
@@ -140,7 +138,6 @@
 							<input type="text" v-model="five.quantity">
 						</div>
 						<div class="input-box">
-							<!-- <label>총매도수량합계</label> -->
 							<label>매수주기</label>
 							<input type="text" v-model="five.buyTime">
 						</div>
@@ -161,7 +158,7 @@
 				<button class="blue" @click="refresh">새로고침</button>
 				<button class="orange" @click="exit">종료</button>
 			</div>
-			<div class="user-box"><span>접속 아이디: {{ id }} 님</span></div>
+			<div class="user-box"><span>접속 아이디: {{ id }} 님</span><span class="bubble" v-show="userMsg !== ''">{{ userMsg }}<button @click="userMsg = ''">x</button></span></div>
 			<div class="money-box"><span>총 잔고: {{ total }}</span> <span>사용가능 잔고: {{ available }}</span></div>
     	</div>
   	</div>
@@ -172,9 +169,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import Titlebar from '@/components/Titlebar.vue';
 import { State, Action } from 'vuex-class';
 import { orderService } from './order.service';
-import { userService } from './user.service';
-import { user } from '@/env/user';
-import { caculateLimitDate, makeRandom } from '@/shared/functions';
+import { makeRandom } from '@/shared/functions';
 
 declare const window: any;
 const electron = window.require('electron');
@@ -211,9 +206,10 @@ export default class Home extends Vue {
 	private available: number = 0;
 	private total: number = 0;
 	private bg: string = '#00c89c';
-	private show:boolean = false;
+	private show: boolean = false;
 	private msg: string = '';
-	private menu: number = 0;
+	private userMsg: string = '';
+	private menu: number = 6;
 	private one: any = {
 		max: '',
 		min: '',
@@ -269,7 +265,7 @@ export default class Home extends Vue {
 			const data = JSON.parse(event.data);
 			console.log('Message #########', data);
 			if (data.errorCode === 'UNAUTHORIZED') {
-				this.showAlert('인증이 승인되지 않습니다.', '#ff2950');
+				this.userMsg = '인증이 승인되지 않습니다.';
 				const msg = {
 					type: 'authorization',
 					token: localStorage.getItem('tken')
@@ -285,7 +281,7 @@ export default class Home extends Vue {
 				this.id = localStorage.getItem('id');
 				this.login(this.id)
 					.then(() => {
-						this.showAlert('자동 로그인되었습니다.', '#00c89c');
+						this.userMsg = '자동 로그인되었습니다.';
 					});
 				this.ws.send(JSON.stringify(msg));
 			} else if (data.channel === 'balance') {
@@ -308,28 +304,33 @@ export default class Home extends Vue {
 		}
 	}
 
+	private selectMenu(num: number): void {
+		if (this.menu === num) {
+			this.menu = 6;
+		} else {
+			this.menu = num;
+		}
+	}
+
 	private showAlert(msg: string, color: string): void {
 		this.msg = msg;
 		this.bg = color;
 		this.show = true;
-	}
+	}	
 
 	private refresh(): void {
 		location.reload();
 		this.showAlert('새로고침되었습니다.', '#13143f');
 	}
 
-	private run() {
-		// if (this.one.max === '' || this.one.min === '' || this.one.quantity === '' || this.one.sellTime === '' || this.one.buyTime === '' || this.one.limitTime || this.two.max === '' || this.two.min === '' || this.two.quantity === '' || this.two.sellTime === '' || this.two.buyTime === '' || this.two.limitTime === '') {
-		// 	return alert('하나라도 입력란이 비어 있으면 안됩니다.');
-		// }
+	private run(): void {
 		alert('입력한 값에 따라 실행됩니다.');
 		this.g = this.generator();
 		this.g.next();
 		this.type = 'cancel';
 	}
 
-	private* generator() {
+	private* generator(): Generator {
 		this.showAlert('1차주기 시작합니다.', '#00c89c');
 		this.runSetInterval('one', 'time');
 		yield
@@ -347,7 +348,7 @@ export default class Home extends Vue {
 		yield
 	}
 	
-	private runSetInterval(obj: any, setTime: string) {
+	private runSetInterval(obj: any, setTime: string): void {
 		const that: { [index: string]: any } = this;
 		this.limit[obj] = new Date().getTime() + (+that[obj].limitTime * 1000);
 		this.order[setTime] = setInterval(() => {
@@ -356,7 +357,11 @@ export default class Home extends Vue {
 				clearInterval(this.order[setTime]);
 				this.g.next();
 				if (this.count === 4) {
-					alert('모든 주기가 끝났습니다.');
+					this.showAlert('모든 주기가 끝났습니다. 1차주기로 돌아갑니다.', '#00c89c');
+					this.g.return(1);
+					this.count = 0;
+					this.g = this.generator();
+					this.g.next();
 				}
 			}
 			const { min, max, quantity, sellTime, buyTime } = that[obj];
@@ -395,10 +400,10 @@ export default class Home extends Vue {
 		} catch (error) {
 			console.error(error);
 			if (error.response.data.errorCode === 'UNAUTHORIZED') {
-				this.showAlert('토큰이 만료되어 승인이 거부되었습니다. 로그인을 시도합니다.', '#ff2950');
+				this.userMsg = '토큰이 만료되어 승인이 거부되었습니다. 로그인을 시도합니다.';
 				this.login(this.id)
 					.then(() => {
-						this.showAlert('자동 로그인되었습니다.', '#00c89c');
+						this.userMsg = '자동 로그인되었습니다.';
 					});
 			}
 			if (error.response.data.errorCode.includes('INVALID_MARKET')) {
