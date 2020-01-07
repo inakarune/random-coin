@@ -20,7 +20,6 @@
 							<input type="text" v-model="one.quantity">
 						</div>
 						<div class="input-box">
-							<!-- <label>총매도수량합계</label> -->
 							<label>매수주기</label>
 							<input type="text" v-model="one.buyTime">
 						</div>
@@ -50,7 +49,6 @@
 							<input type="text" v-model="two.quantity">
 						</div>
 						<div class="input-box">
-							<!-- <label>총매도수량합계</label> -->
 							<label>매수주기</label>
 							<input type="text" v-model="two.buyTime">
 						</div>
@@ -252,7 +250,7 @@ export default class Home extends Vue {
 	};
 	private count: number = 0;
 
-	private mounted() {
+	private mounted(): void {
 		this.ws.onopen = () => {
 			const msg = {
 				type: 'authorization',
